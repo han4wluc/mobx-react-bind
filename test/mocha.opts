@@ -1,0 +1,6 @@
+test/**/*.spec.tsx
+-r ts-node/register
+--ignore node_modules
+--extension ts tsx
+--recursive
+--timeout 5000

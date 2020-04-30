@@ -1,0 +1,33 @@
+{
+  "name": "react-mobx-bind",
+  "version": "0.0.1",
+  "main": "lib/index.js",
+  "author": "Hanyon Wu <han4wluc@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha --opts test/mocha.opts",
+    "build": "rm -rf lib && tsc"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^7.0.2",
+    "@types/react-test-renderer": "^16.9.2",
+    "@types/sinon": "^9.0.0",
+    "chai": "^4.2.0",
+    "mobx": "^5.15.4",
+    "mobx-react": "^6.2.2",
+    "mocha": "^7.1.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-test-renderer": "^16.13.1",
+    "sinon": "^9.0.2",
+    "ts-node": "^8.9.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.8.3"
+  },
+  "peerDependencies": {
+    "mobx": "^5.15.4",
+    "mobx-react": "^6.2.2",
+    "react": "^16.13.1"
+  }
+}
