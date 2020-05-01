@@ -1,2 +1,2 @@
-import mobxReactBind from './mobxReactBind'
+import mobxReactBind from "./mobxReactBind";
 export default mobxReactBind;
