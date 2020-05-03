@@ -9,7 +9,7 @@ class ModalStore<T> {
   @observable visible: boolean = false;
   @observable payload: T | undefined;
 
-  @action show(payload: T): void {
+  @action show(payload?: T): void {
     this.visible = true;
     this.payload = payload;
   }

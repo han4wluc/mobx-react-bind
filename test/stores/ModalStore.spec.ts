@@ -23,6 +23,13 @@ describe('ModalStore', () => {
   });
 
   describe('ModalStore#show', () => {
+    it('set visible to true', () => {
+      const store = new ModalStore();
+      store.show();
+      assert.equal(store.visible, true);
+      assert.equal(store.payload, undefined);
+    });
+
     it('set visible to true and set payload', () => {
       const store = new ModalStore();
       store.show('payload')
@@ -41,5 +48,4 @@ describe('ModalStore', () => {
       assert.equal(store.payload, undefined);
     });
   });
-
 });
