@@ -8,12 +8,18 @@
     "test": "mocha --opts test/mocha.opts",
     "build": "rm -rf lib && tsc && rm ./lib/tsconfig.tsbuildinfo"
   },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn test"
+    }
+  },
   "devDependencies": {
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/react-test-renderer": "^16.9.2",
     "@types/sinon": "^9.0.0",
     "chai": "^4.2.0",
+    "husky": "^4.2.5",
     "mobx": "^5.15.4",
     "mobx-react": "^6.2.2",
     "mocha": "^7.1.2",
