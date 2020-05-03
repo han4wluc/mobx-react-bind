@@ -1,4 +1,5 @@
 test/**/*.spec.tsx
+test/**/*.spec.ts
 -r ts-node/register
 --ignore node_modules
 --extension ts tsx

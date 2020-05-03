@@ -1,12 +1,12 @@
 {
   "name": "mobx-react-bind",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "lib/index.js",
   "author": "Hanyon Wu <han4wluc@gmail.com>",
   "license": "MIT",
   "scripts": {
     "test": "mocha --opts test/mocha.opts",
-    "build": "rm -rf lib && tsc"
+    "build": "rm -rf lib && tsc && rm ./lib/tsconfig.tsbuildinfo"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
