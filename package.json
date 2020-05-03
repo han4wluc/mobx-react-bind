@@ -1,5 +1,5 @@
 {
-  "name": "react-mobx-bind",
+  "name": "mobx-react-bind",
   "version": "0.1.0",
   "main": "lib/index.js",
   "author": "Hanyon Wu <han4wluc@gmail.com>",
