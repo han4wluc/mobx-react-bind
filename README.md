@@ -69,37 +69,3 @@ class CounterStore {
   }
 }
 ```
-
-## Passing dependencies to the store
-
-You can pass additional dependencies into the mobx store constructor.
-This is a very basic depencency injection that can make testing easier.
-
-```jsx
-class CounterStore {
-  handleClick: Function;
-
-  constructor(dependencies) {
-    this.handleClick = dependencies.handleClick;
-  }
-}
-
-const CounterComponent = mobxReactBind({
-  Store: CounterStore,
-  dependencies: {
-    handleClick: () => { console.log('handle click') }
-  }
-})(CounterView)
-```
-
-## Handling props update
-
-Similar to `componentDidUpdate`, `onUpdateProps` is called when the component's props have changed
-
-```jsx
-class CounterStore {
-  onUpdateProps = (newProps) => {
-    console.log(newProps)
-  }
-}
-```

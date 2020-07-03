@@ -1,34 +1,25 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
+import "reflect-metadata";
+import { ReflectiveInjector, Injectable, Injector } from "injection-js";
 
-interface IConnectPramaters<T> {
+interface IConnectPramaters {
   Store: any;
-  dependencies?: T;
-  isGlobal?: boolean;
+  providers?: any[];
 }
 
-function mobxReactBind<T>({
-  Store,
-  dependencies,
-  isGlobal = false,
-}: IConnectPramaters<T>) {
-  return (Element: any): any => {
-    if (isGlobal) {
-      const globalStore = new Store({ ...dependencies });
-      const ReturnCompGlobal: any = (props: any): any => {
-        const OElement: any = observer(Element);
-        return <OElement {...props} store={globalStore} />;
-      };
-      return ReturnCompGlobal;
-    }
+function mobxReactBind({ Store, providers = [] }: IConnectPramaters) {
+  const providerss = providers.concat(Store);
 
+  return (Element: any): any => {
     const ReturnComp = (props: any): any => {
       const didMountRef = useRef(false);
 
       const OElement: any = observer(Element);
       const store = useMemo(() => {
-        return new Store({ ...dependencies, ...props.dependencies }, props);
-      }, [0]);
+        const injector = ReflectiveInjector.resolveAndCreate(providerss);
+        return injector.get(Store);
+      }, [0, providerss]);
 
       useEffect(() => {
         if (store.mount) {
