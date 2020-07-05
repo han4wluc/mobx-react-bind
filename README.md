@@ -15,7 +15,7 @@ Define a mobx store
 ```jsx
 import { observable, action } from 'mobx'
 
-class CounterStore {
+class CounterContainer {
   @observable
   count = 0
 
@@ -30,9 +30,9 @@ Define a react stateless component
 
 ```jsx
 function CounterView(props) {
-  const { store } = props
+  const { container } = props
   return (
-    <div onClick={store.increment}>{store.count}</div>
+    <div onClick={container.increment}>{store.count}</div>
   )
 }
 ```
@@ -43,7 +43,7 @@ Bind mobx store and react view
 import mobxReactBind from 'mobx-react-bind'
 
 const CounterComponent = mobxReactBind({
-  Store: CounterStore,
+  container: CounterContainer,
 })(CounterView)
 
 
@@ -59,7 +59,7 @@ In the mobx store, you can add a `mount` method that will be called when the com
 It also accepts a function as a return value that will be called when the component is unmounted.
 
 ```jsx
-class CounterStore {
+class CounterContainer {
   
   mount = () => {
     console.log('mount')

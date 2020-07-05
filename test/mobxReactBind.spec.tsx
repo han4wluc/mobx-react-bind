@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 import { assert } from "chai";
 import sinon from "sinon";
 import * as TestRenderer from "react-test-renderer";
@@ -18,7 +18,7 @@ describe("mobxReactBind", () => {
     let testComponent;
 
     @Injectable()
-    class CounterStore {
+    class CounterContainer {
       constructor() {}
 
       @observable
@@ -31,12 +31,12 @@ describe("mobxReactBind", () => {
     }
 
     function CounterView(props) {
-      const { store, prefix = "" } = props;
-      return <div onClick={store.increment}>{`${prefix}${store.count}`}</div>;
+      const { container, prefix = "" } = props;
+      return <div onClick={container.increment}>{`${prefix}${container.count}`}</div>;
     }
 
     const CounterComponent = mobxReactBind({
-      Store: CounterStore,
+      container: CounterContainer,
     })(CounterView);
 
     it("should render correct store values", () => {
@@ -62,6 +62,67 @@ describe("mobxReactBind", () => {
     });
   });
 
+  describe('state', () => {
+    let testComponent;
+    let testComponent2;
+
+    @Injectable()
+    class UserStore {
+
+      @observable name = 'old name'
+
+      @action
+      setName(name: string) {
+        console.warn('setName', name)
+        this.name = name;
+      }
+    }
+
+    @Injectable()
+    class CounterContainer {
+      constructor(private userStore: UserStore) {
+
+      }
+
+      @computed
+      get prefix() {
+        console.warn('prefix', this.userStore.name)
+        return this.userStore.name
+      }
+
+      @observable
+      count = 0;
+
+      @action
+      incrementAndSetName = () => {
+        this.count = this.count + 1;
+        this.userStore.setName('new name')
+      };
+    }
+
+    function CounterView(props) {
+      const { container } = props;
+      return <div onClick={container.incrementAndSetName}>{`${container.prefix}-${container.count}`}</div>;
+    }
+
+    const CounterComponent = mobxReactBind({
+      container: CounterContainer,
+      providers: [UserStore]
+    })(CounterView);
+
+    it('should reset container state, but keep store state', () => {
+      testComponent = TestRenderer.create(<CounterComponent />);
+      TestRenderer.act(() => {
+        testComponent.root.findByType("div").props.onClick();
+      });
+      assert.deepEqual(testComponent.toJSON().children, ["new name-1"]);
+      testComponent.unmount();
+
+      testComponent2 = TestRenderer.create(<CounterComponent />);
+      assert.deepEqual(testComponent2.toJSON().children, ["new name-0"]);
+    })
+  })
+
   describe("component mount, unmount", () => {
     let testComponent;
     let mountSpy = sinon.spy();
@@ -74,7 +135,7 @@ describe("mobxReactBind", () => {
     }
 
     @Injectable()
-    class CounterStore {
+    class CounterContainer {
       constructor(private mountService: MountService) {}
 
       mount = () => {
@@ -90,7 +151,7 @@ describe("mobxReactBind", () => {
     }
 
     const CounterComponent = mobxReactBind({
-      Store: CounterStore,
+      container: CounterContainer,
       providers: [MountService],
     })(CounterView);
 
@@ -125,7 +186,7 @@ describe("mobxReactBind", () => {
   describe("initialize non injectable classes", () => {
     let testComponent;
     @Injectable()
-    class CounterStore {
+    class CounterContainer {
       resourcesStore;
       constructor() {
         this.resourcesStore = new ResourcesStore<any>();
@@ -137,7 +198,7 @@ describe("mobxReactBind", () => {
     }
 
     const CounterComponent = mobxReactBind({
-      Store: CounterStore,
+      container: CounterContainer,
     })(CounterView);
 
     it("should render correct store values", () => {

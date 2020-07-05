@@ -1,7 +1,6 @@
-import { assert } from "chai";
 import "reflect-metadata";
-import { Injectable, Injector, ReflectiveInjector } from "injection-js";
-import "mobx-react-lite/batchingForReactDom";
+import { assert } from "chai";
+import { Injectable, ReflectiveInjector , ResolvedReflectiveProvider} from "injection-js";
 
 @Injectable()
 class Engine {
@@ -12,25 +11,52 @@ class Engine {
 
 @Injectable()
 class Car {
-  constructor(public engine: Engine) {}
+  count: number;
+  constructor(private  engine: Engine) {
+    this.count = 0;
+  }
   get engineName() {
-    return this.engine.name;
+    return this.engine.name + ' ' + this.count;
+  }
+  increment = () => {
+    this.count ++;
   }
 }
 
 describe("Injectable", () => {
   it("basic features", () => {
-    function getDi({ Store, providers = [] }) {
-      var injector = ReflectiveInjector.resolveAndCreate(
-        providers.concat(Injectable()(Store))
-      );
-      return injector.get(Store);
+    let injector = ReflectiveInjector.resolveAndCreate([])
+
+    injector['add'] = function (_providers: ResolvedReflectiveProvider[]) {
+      _providers.forEach((provider) => {
+        if (this.keyIds.includes(provider.key.id)) {
+          return
+        }
+        this.keyIds.push(provider.key.id)
+        this.objs.push(this._new(provider))
+      })
+    }
+
+    function getDi({ container, providers = [] }) {
+      const resolvedProviders = ReflectiveInjector.resolve(providers.concat(container))
+      injector['add'](resolvedProviders)
+      return injector.get(container);
     }
     const car = getDi({
-      Store: Car,
+      container: Car,
       providers: [Engine],
     });
     assert.isTrue(car instanceof Car);
-    assert.equal(car.engineName, "hello");
+    assert.equal(car.engineName, "hello 0");
+    car.increment()
+    assert.equal(car.engineName, 'hello 1')
+
+
+    const car2 = getDi({
+      container: Car,
+      providers: [Engine],
+    });
+
+    assert.equal(car2.engineName, 'hello 1')
   });
 });
