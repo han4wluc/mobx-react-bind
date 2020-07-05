@@ -32,7 +32,7 @@ Define a react stateless component
 function CounterView(props) {
   const { container } = props
   return (
-    <div onClick={container.increment}>{store.count}</div>
+    <div onClick={container.increment}>{container.count}</div>
   )
 }
 ```
