@@ -1,6 +1,10 @@
 import "reflect-metadata";
 import { assert } from "chai";
-import { Injectable, ReflectiveInjector , ResolvedReflectiveProvider} from "injection-js";
+import {
+  Injectable,
+  ReflectiveInjector,
+  ResolvedReflectiveProvider,
+} from "injection-js";
 
 @Injectable()
 class Engine {
@@ -12,34 +16,36 @@ class Engine {
 @Injectable()
 class Car {
   count: number;
-  constructor(private  engine: Engine) {
+  constructor(private engine: Engine) {
     this.count = 0;
   }
   get engineName() {
-    return this.engine.name + ' ' + this.count;
+    return this.engine.name + " " + this.count;
   }
   increment = () => {
-    this.count ++;
-  }
+    this.count++;
+  };
 }
 
 describe("Injectable", () => {
   it("basic features", () => {
-    let injector = ReflectiveInjector.resolveAndCreate([])
+    let injector = ReflectiveInjector.resolveAndCreate([]);
 
-    injector['add'] = function (_providers: ResolvedReflectiveProvider[]) {
+    injector["add"] = function (_providers: ResolvedReflectiveProvider[]) {
       _providers.forEach((provider) => {
         if (this.keyIds.includes(provider.key.id)) {
-          return
+          return;
         }
-        this.keyIds.push(provider.key.id)
-        this.objs.push(this._new(provider))
-      })
-    }
+        this.keyIds.push(provider.key.id);
+        this.objs.push(this._new(provider));
+      });
+    };
 
     function getDi({ container, providers = [] }) {
-      const resolvedProviders = ReflectiveInjector.resolve(providers.concat(container))
-      injector['add'](resolvedProviders)
+      const resolvedProviders = ReflectiveInjector.resolve(
+        providers.concat(container)
+      );
+      injector["add"](resolvedProviders);
       return injector.get(container);
     }
     const car = getDi({
@@ -48,15 +54,14 @@ describe("Injectable", () => {
     });
     assert.isTrue(car instanceof Car);
     assert.equal(car.engineName, "hello 0");
-    car.increment()
-    assert.equal(car.engineName, 'hello 1')
-
+    car.increment();
+    assert.equal(car.engineName, "hello 1");
 
     const car2 = getDi({
       container: Car,
       providers: [Engine],
     });
 
-    assert.equal(car2.engineName, 'hello 1')
+    assert.equal(car2.engineName, "hello 1");
   });
 });
