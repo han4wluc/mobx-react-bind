@@ -1,6 +1,6 @@
 {
   "name": "mobx-react-bind",
-  "version": "0.2.3-rc",
+  "version": "0.2.4-alpha1",
   "main": "lib/index.js",
   "author": "Hanyon Wu <han4wluc@gmail.com>",
   "license": "MIT",

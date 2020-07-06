@@ -7,6 +7,7 @@ import { Injectable } from "injection-js";
 import mobxReactBind, {
   addCommonProviders,
   resetInjector,
+  getInjector,
 } from "../src/mobxReactBind";
 import ResourcesStore from "../src/stores/ResourceStore";
 
@@ -325,4 +326,48 @@ describe("mobxReactBind", () => {
       testComponent.unmount();
     });
   });
+
+  describe('add', () => {
+
+    beforeEach(() => {
+      resetInjector()
+    })
+
+    it.only('should do it', () => {
+
+      @Injectable()
+      class Engine1 {}
+
+      @Injectable()
+      class Car1 {private engine: Engine1}
+
+      @Injectable()
+      class Car2 {private engine: Engine1}
+
+      assert.equal(getInjector()['keyIds'].length, 0)
+
+      addCommonProviders([Engine1])
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+      addCommonProviders([Engine1])
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+
+      function Component() {
+        return <div>ok</div>
+      }
+
+      mobxReactBind({
+        container: Car1,
+        providers: [Engine1]
+      })(Component);
+
+      mobxReactBind({
+        container: Car2,
+        providers: [Engine1]
+      })(Component);
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+    })
+  })
 });
