@@ -9,16 +9,24 @@ interface IConnectPramaters {
 }
 
 function add(_providers: ResolvedReflectiveProvider[]) {
-  _providers.forEach((provider) => {
-    // @ts-ignore
-    if (this.keyIds.includes(provider.key.id)) {
-      return;
+  try {
+    for (let provider of _providers) {
+      // @ts-ignore
+      if (this.keyIds.includes(provider.key.id)) {
+        return;
+      }
+      // @ts-ignore
+      this.keyIds.push(provider.key.id);
+      // @ts-ignore
+      this.objs.push(null)
+      this.objs[this.objs.length - 1] = this._new(provider)
     }
-    // @ts-ignore
-    this.keyIds.push(provider.key.id);
-    // @ts-ignore
-    this.objs.push(this._new(provider));
-  });
+  } catch (error) {
+    console.log('injector.add Error')
+    console.log(this.keyIds)
+    console.log(this.objs)
+    throw error
+  }
 }
 
 let parentInjector = ReflectiveInjector.resolveAndCreate([]);

@@ -333,7 +333,7 @@ describe("mobxReactBind", () => {
       resetInjector()
     })
 
-    it.only('should do it', () => {
+    it('should not throw cyclic error', () => {
 
       @Injectable()
       class Engine1 {}
