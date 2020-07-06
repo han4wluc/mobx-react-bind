@@ -13,7 +13,7 @@ function add(_providers: ResolvedReflectiveProvider[]) {
     for (let provider of _providers) {
       // @ts-ignore
       if (this.keyIds.includes(provider.key.id)) {
-        return;
+        continue;
       }
       // @ts-ignore
       this.keyIds.push(provider.key.id);
