@@ -1,36 +1,67 @@
 import "reflect-metadata";
 import React, { useEffect, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
-import { ReflectiveInjector } from "injection-js";
+import { ReflectiveInjector, ResolvedReflectiveProvider } from "injection-js";
 
 interface IConnectPramaters {
   container: any;
   providers?: any[];
 }
 
-const injector = ReflectiveInjector.resolveAndCreate([]);
+function add(_providers: ResolvedReflectiveProvider[]) {
+  try {
+    for (let provider of _providers) {
+      // @ts-ignore
+      if (this.keyIds.includes(provider.key.id)) {
+        continue;
+      }
+      // @ts-ignore
+      this.keyIds.push(provider.key.id);
+      // @ts-ignore
+      this.objs.push(null)
+      this.objs[this.objs.length - 1] = this._new(provider)
+    }
+  } catch (error) {
+    console.log('injector.add Error')
+    console.log(this.keyIds)
+    console.log(this.objs)
+    throw error
+  }
+}
+
+let parentInjector = ReflectiveInjector.resolveAndCreate([]);
+
+// @ts-ignore
+parentInjector.add = add;
+
+export const getInjector = () => {
+  return parentInjector;
+}
 
 // TODO implement injector.add in library
 
-// @ts-ignore
-injector.add = function(_providers: ResolvedReflectiveProvider[]) {
-  _providers.forEach(provider => {
-    // @ts-ignore
-    if (this.keyIds.includes(provider.key.id)) {
-      return;
-    }
-    // @ts-ignore
-    this.keyIds.push(provider.key.id);
-    // @ts-ignore
-    this.objs.push(this._new(provider));
-  });
+export const addCommonProviders = (providers = []) => {
+  // @ts-ignore
+  parentInjector.add(ReflectiveInjector.resolve(providers));
 };
 
-const mobxReactBind = ({ container, providers = [] }: IConnectPramaters) => {
-  const resolvedProviders = ReflectiveInjector.resolve(providers.concat(container));
+export const resetInjector = () => {
+  parentInjector = ReflectiveInjector.resolveAndCreate([]);
+  // @ts-ignore
+  parentInjector.add = add;
+};
+
+export const mobxReactBind = ({
+  container,
+  providers = [],
+}: IConnectPramaters) => {
+  const resolvedProviders = ReflectiveInjector.resolve(providers);
+
+  const resolvedContainer = ReflectiveInjector.resolve([container])
+  const injector = ReflectiveInjector.fromResolvedProviders(resolvedContainer, parentInjector)
 
   // @ts-ignore
-  injector.add(resolvedProviders);
+  parentInjector.add(resolvedProviders);
 
   return (Element: any): any => {
     const ReturnComp = (props: any): any => {
@@ -38,7 +69,7 @@ const mobxReactBind = ({ container, providers = [] }: IConnectPramaters) => {
 
       const OElement: any = observer(Element);
       const _container = useMemo(() => {
-        return injector.resolveAndInstantiate(container);
+        return injector.instantiateResolved(resolvedContainer[0]);
       }, [0]);
 
       useEffect(() => {
@@ -60,8 +91,6 @@ const mobxReactBind = ({ container, providers = [] }: IConnectPramaters) => {
     };
     return ReturnComp;
   };
-}
-
-export interface IStoreDependencies {}
+};
 
 export default mobxReactBind;

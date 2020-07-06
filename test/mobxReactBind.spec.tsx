@@ -4,7 +4,11 @@ import { assert } from "chai";
 import sinon from "sinon";
 import * as TestRenderer from "react-test-renderer";
 import { Injectable } from "injection-js";
-import mobxReactBind from "../src/mobxReactBind";
+import mobxReactBind, {
+  addCommonProviders,
+  resetInjector,
+  getInjector,
+} from "../src/mobxReactBind";
 import ResourcesStore from "../src/stores/ResourceStore";
 
 const sleep = async (time = 1) => {
@@ -16,28 +20,40 @@ const sleep = async (time = 1) => {
 describe("mobxReactBind", () => {
   describe("basic features", () => {
     let testComponent;
+    let CounterComponent;
 
-    @Injectable()
-    class CounterContainer {
-      constructor() {}
+    beforeEach(() => {
+      resetInjector();
+      @Injectable()
+      class CounterContainer {
+        constructor() {}
 
-      @observable
-      count = 0;
+        @observable
+        count = 0;
 
-      @action
-      increment = () => {
-        this.count = this.count + 1;
-      };
-    }
+        @action
+        increment = () => {
+          this.count = this.count + 1;
+        };
+      }
 
-    function CounterView(props) {
-      const { container, prefix = "" } = props;
-      return <div onClick={container.increment}>{`${prefix}${container.count}`}</div>;
-    }
+      function CounterView(props) {
+        const { container, prefix = "" } = props;
+        return (
+          <div
+            onClick={container.increment}
+          >{`${prefix}${container.count}`}</div>
+        );
+      }
 
-    const CounterComponent = mobxReactBind({
-      container: CounterContainer,
-    })(CounterView);
+      CounterComponent = mobxReactBind({
+        container: CounterContainer,
+      })(CounterView);
+    });
+
+    afterEach(() => {
+      resetInjector();
+    });
 
     it("should render correct store values", () => {
       testComponent = TestRenderer.create(<CounterComponent />);
@@ -62,107 +78,201 @@ describe("mobxReactBind", () => {
     });
   });
 
-  describe('state', () => {
+  describe("addCommonProviders", () => {
+    let testComponent;
+    let CounterComponent;
+
+    beforeEach(() => {
+      @Injectable()
+      class UserStore {
+        @observable name = "old name";
+
+        @action
+        setName(name: string) {
+          this.name = name;
+        }
+      }
+
+      @Injectable()
+      class CounterContainer {
+        constructor(private userStore: UserStore) {}
+
+        @computed
+        get prefix() {
+          return this.userStore.name;
+        }
+
+        @observable
+        count = 0;
+      }
+
+      function CounterView(props) {
+        const { container } = props;
+        return <div>{`${container.prefix}-${container.count}`}</div>;
+      }
+
+      addCommonProviders([UserStore]);
+
+      CounterComponent = mobxReactBind({
+        container: CounterContainer,
+      })(CounterView);
+    });
+
+    afterEach(() => {
+      resetInjector();
+    });
+
+    it("should render correct store values", () => {
+      testComponent = TestRenderer.create(<CounterComponent />);
+      assert.deepEqual(testComponent.toJSON().children, ["old name-0"]);
+      testComponent.unmount();
+    });
+  });
+
+  describe("state", () => {
     let testComponent;
     let testComponent2;
+    let testComponent3;
 
-    @Injectable()
-    class UserStore {
+    let CounterComponent;
+    let Counter2Component;
 
-      @observable name = 'old name'
+    beforeEach(() => {
+      resetInjector();
 
-      @action
-      setName(name: string) {
-        console.warn('setName', name)
-        this.name = name;
-      }
-    }
+      @Injectable()
+      class UserStore {
+        @observable name = "old name";
 
-    @Injectable()
-    class CounterContainer {
-      constructor(private userStore: UserStore) {
-
-      }
-
-      @computed
-      get prefix() {
-        console.warn('prefix', this.userStore.name)
-        return this.userStore.name
+        @action
+        setName(name: string) {
+          this.name = name;
+        }
       }
 
-      @observable
-      count = 0;
+      @Injectable()
+      class CounterContainer {
+        constructor(private userStore: UserStore) {}
 
-      @action
-      incrementAndSetName = () => {
-        this.count = this.count + 1;
-        this.userStore.setName('new name')
-      };
-    }
+        @computed
+        get prefix() {
+          return this.userStore.name;
+        }
 
-    function CounterView(props) {
-      const { container } = props;
-      return <div onClick={container.incrementAndSetName}>{`${container.prefix}-${container.count}`}</div>;
-    }
+        @observable
+        count = 0;
 
-    const CounterComponent = mobxReactBind({
-      container: CounterContainer,
-      providers: [UserStore]
-    })(CounterView);
+        @action
+        incrementAndSetName = () => {
+          this.count = this.count + 1;
+          this.userStore.setName("new name");
+        };
+      }
 
-    it('should reset container state, but keep store state', () => {
+      @Injectable()
+      class Counter2Container {
+        constructor(private userStore: UserStore) {}
+
+        @computed
+        get prefix() {
+          return this.userStore.name;
+        }
+
+        @observable
+        count = 0;
+
+        @action
+        incrementAndSetName = () => {
+          this.count = this.count + 1;
+          this.userStore.setName("new name");
+        };
+      }
+
+      function CounterView(props) {
+        const { container } = props;
+        return (
+          <div
+            onClick={container.incrementAndSetName}
+          >{`${container.prefix}-${container.count}`}</div>
+        );
+      }
+
+      CounterComponent = mobxReactBind({
+        container: CounterContainer,
+        providers: [UserStore],
+      })(CounterView);
+
+      Counter2Component = mobxReactBind({
+        container: Counter2Container,
+        providers: [UserStore],
+      })(CounterView);
+    });
+
+    afterEach(() => {
+      resetInjector();
+    });
+
+    it("should reset container state, but keep store state", () => {
       testComponent = TestRenderer.create(<CounterComponent />);
+      testComponent3 = TestRenderer.create(<Counter2Component />);
+
+      assert.deepEqual(testComponent.toJSON().children, ["old name-0"]);
+      assert.deepEqual(testComponent3.toJSON().children, ["old name-0"]);
+
       TestRenderer.act(() => {
         testComponent.root.findByType("div").props.onClick();
       });
       assert.deepEqual(testComponent.toJSON().children, ["new name-1"]);
+      assert.deepEqual(testComponent3.toJSON().children, ["new name-0"]);
       testComponent.unmount();
 
       testComponent2 = TestRenderer.create(<CounterComponent />);
       assert.deepEqual(testComponent2.toJSON().children, ["new name-0"]);
-    })
-  })
+      assert.deepEqual(testComponent3.toJSON().children, ["new name-0"]);
+    });
+  });
 
   describe("component mount, unmount", () => {
     let testComponent;
     let mountSpy = sinon.spy();
     let unmountSpy = sinon.spy();
-
-    @Injectable()
-    class MountService {
-      onMount = mountSpy;
-      onUmount = unmountSpy;
-    }
-
-    @Injectable()
-    class CounterContainer {
-      constructor(private mountService: MountService) {}
-
-      mount = () => {
-        this.mountService.onMount();
-        return () => {
-          this.mountService.onUmount();
-        };
-      };
-    }
-
-    function CounterView(props) {
-      return <div>Ok</div>;
-    }
-
-    const CounterComponent = mobxReactBind({
-      container: CounterContainer,
-      providers: [MountService],
-    })(CounterView);
+    let CounterComponent;
 
     beforeEach(() => {
       mountSpy.resetHistory();
       unmountSpy.resetHistory();
+      @Injectable()
+      class MountService {
+        onMount = mountSpy;
+        onUmount = unmountSpy;
+      }
+
+      @Injectable()
+      class CounterContainer {
+        constructor(private mountService: MountService) {}
+
+        mount = () => {
+          this.mountService.onMount();
+          return () => {
+            this.mountService.onUmount();
+          };
+        };
+      }
+
+      function CounterView(props) {
+        return <div>Ok</div>;
+      }
+
+      CounterComponent = mobxReactBind({
+        container: CounterContainer,
+        providers: [MountService],
+      })(CounterView);
     });
 
     afterEach(() => {
       mountSpy.resetHistory();
       unmountSpy.resetHistory();
+      resetInjector();
     });
 
     it("should mount correctly", async () => {
@@ -185,21 +295,30 @@ describe("mobxReactBind", () => {
 
   describe("initialize non injectable classes", () => {
     let testComponent;
-    @Injectable()
-    class CounterContainer {
-      resourcesStore;
-      constructor() {
-        this.resourcesStore = new ResourcesStore<any>();
+    let CounterComponent;
+
+    beforeEach(() => {
+      resetInjector();
+      @Injectable()
+      class CounterContainer {
+        resourcesStore;
+        constructor() {
+          this.resourcesStore = new ResourcesStore<any>();
+        }
       }
-    }
 
-    function CounterView(props) {
-      return <div>Ok</div>;
-    }
+      function CounterView(props) {
+        return <div>Ok</div>;
+      }
 
-    const CounterComponent = mobxReactBind({
-      container: CounterContainer,
-    })(CounterView);
+      CounterComponent = mobxReactBind({
+        container: CounterContainer,
+      })(CounterView);
+    });
+
+    afterEach(() => {
+      resetInjector();
+    });
 
     it("should render correct store values", () => {
       testComponent = TestRenderer.create(<CounterComponent />);
@@ -207,4 +326,48 @@ describe("mobxReactBind", () => {
       testComponent.unmount();
     });
   });
+
+  describe('add', () => {
+
+    beforeEach(() => {
+      resetInjector()
+    })
+
+    it('should not throw cyclic error', () => {
+
+      @Injectable()
+      class Engine1 {}
+
+      @Injectable()
+      class Car1 {private engine: Engine1}
+
+      @Injectable()
+      class Car2 {private engine: Engine1}
+
+      assert.equal(getInjector()['keyIds'].length, 0)
+
+      addCommonProviders([Engine1])
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+      addCommonProviders([Engine1])
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+
+      function Component() {
+        return <div>ok</div>
+      }
+
+      mobxReactBind({
+        container: Car1,
+        providers: [Engine1]
+      })(Component);
+
+      mobxReactBind({
+        container: Car2,
+        providers: [Engine1]
+      })(Component);
+
+      assert.equal(getInjector()['keyIds'].length, 1)
+    })
+  })
 });
